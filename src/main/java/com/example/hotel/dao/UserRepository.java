@@ -4,9 +4,7 @@ import com.example.hotel.entity.User;
 import com.example.hotel.entity.enums.Role;
 import com.example.hotel.util.ConnectionManager;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,8 +44,26 @@ public class UserRepository implements Dao<Integer, User> {
 
 
     @Override
-    public Optional<User> findById(Integer id) {
-        return Optional.empty();
+    public Optional<User> findById(Integer id) throws SQLException { // TODO ==> IS IT CORRECT RETURN Optional ??
+        String sql = """
+                select *
+                from users
+                where id = ?;
+                """;
+
+        Connection open = ConnectionManager.open();
+        ResultSet resultSet;
+        try (PreparedStatement prepareStatement = open.prepareStatement(sql)) {
+            prepareStatement.setInt(1, id);
+            resultSet = prepareStatement.executeQuery();
+        }
+        User user = null;
+
+        while (resultSet.next()){
+            user = buildUser(resultSet);
+        }
+
+        return Optional.of(user) ; // TODO Optional.of() is it CORRECT?
     }
 
     @Override
@@ -69,13 +85,34 @@ public class UserRepository implements Dao<Integer, User> {
     private User buildUser(ResultSet resultSet) throws SQLException {
         return new User(
                 resultSet.getObject("id", Integer.class),
-                resultSet.getObject("firstName", String.class),
-                resultSet.getObject("lastName", String.class),
+                resultSet.getObject("first_name", String.class),
+                resultSet.getObject("last_name", String.class),
                 resultSet.getObject("password", String.class),
-                resultSet.getObject("phoneNumber", String.class),
-                resultSet.getObject("email", String.class),
+                resultSet.getObject("phone_number", String.class),
+                resultSet.getObject("e_mail", String.class),// TODO email or e_mail ??
                 resultSet.getObject("login", String.class),
-                Role.valueOf(resultSet.getObject("roleId", String.class)));
+                Role.valueOf(resultSet.getObject("role_id", String.class)));
+    }
+
+    public User findByLogin(String login) throws SQLException {
+        String sql = """
+                select *
+                from users
+                where login = ?;
+                """;
+            User user = null;
+        try (Connection open = ConnectionManager.open()) {
+            PreparedStatement prepareStatement = open.prepareStatement(sql);
+            int i = 7;
+            prepareStatement.setString(i,login);
+            ResultSet resultSet = prepareStatement.executeQuery();
+            while (resultSet.next()){
+                user = buildUser(resultSet);
+            }
+
+        }
+
+        return user;
     }
 
     public static UserRepository getInstance() {

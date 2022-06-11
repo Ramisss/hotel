@@ -10,11 +10,14 @@ public class UserService {
     private final UserRepository userRepository = UserRepository.getInstance();
 
 
-
-    List<User> findAll(){
-        return userRepository.findAll().stream()
-                .map()
+    List<User> findAll() {
+        return null;
+//        return userRepository.findAll().stream()
+//                .map()
     }
 
 
 }
+
+
+

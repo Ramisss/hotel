@@ -4,7 +4,7 @@ public class DataLoaderToDB {
 
 //TODO  init Role and users List to DataBase
 
-    static
+//    static
 
 
 }
