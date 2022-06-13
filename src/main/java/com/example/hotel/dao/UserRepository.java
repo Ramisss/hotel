@@ -3,18 +3,30 @@ package com.example.hotel.dao;
 import com.example.hotel.entity.User;
 import com.example.hotel.entity.enums.Role;
 import com.example.hotel.util.ConnectionManager;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class UserRepository implements Dao<Integer, User> {
 
+    static Logger logger = LogManager.getLogger();
+
     private static final UserRepository INSTANCE = new UserRepository();
 
     private UserRepository() {
 
+    }
+
+    public static UserRepository getInstance() {
+        return INSTANCE;
     }
 
 
@@ -37,7 +49,9 @@ public class UserRepository implements Dao<Integer, User> {
             return userList;
 
         } catch (SQLException sqlException) {
+            logger.log(Level.ERROR,"SQL Exception findAll method USERDAO");
             throw new RuntimeException(sqlException);
+
         }
 
     }
@@ -59,11 +73,11 @@ public class UserRepository implements Dao<Integer, User> {
         }
         User user = null;
 
-        while (resultSet.next()){
+        while (resultSet.next()) {
             user = buildUser(resultSet);
         }
 
-        return Optional.of(user) ; // TODO Optional.of() is it CORRECT?
+        return Optional.of(user); // TODO Optional.of() is it CORRECT?
     }
 
     @Override
@@ -100,22 +114,17 @@ public class UserRepository implements Dao<Integer, User> {
                 from users
                 where login = ?;
                 """;
-            User user = null;
+        User user = null;
         try (Connection open = ConnectionManager.open()) {
             PreparedStatement prepareStatement = open.prepareStatement(sql);
             int i = 7;
-            prepareStatement.setString(i,login);
+            prepareStatement.setString(i, login);
             ResultSet resultSet = prepareStatement.executeQuery();
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 user = buildUser(resultSet);
             }
-
         }
 
         return user;
-    }
-
-    public static UserRepository getInstance() {
-        return INSTANCE;
     }
 }
