@@ -1,7 +1,9 @@
 package com.example.hotel.util;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
+import java.util.StringJoiner;
 
 public class PropertiesUtil {
     private static final Properties PROPERTIES = new Properties();
@@ -34,4 +36,5 @@ public class PropertiesUtil {
             throw new RuntimeException(e);
         }
     }
+
 }

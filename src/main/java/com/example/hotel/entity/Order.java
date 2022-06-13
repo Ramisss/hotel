@@ -7,7 +7,7 @@ import java.sql.Date;
 
 @RequiredArgsConstructor
 @Data
-public class Orders {
+public class Order {
     private Integer id;
     private Integer userId;
     private Integer roomId;

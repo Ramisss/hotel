@@ -1,4 +1,4 @@
-package com.example.hotel.exeption;
+package com.example.hotel.exception;
 
 public class DaoException extends Exception {
 

@@ -1,13 +1,13 @@
 package com.example.hotel.service;
 
-import com.example.hotel.dao.UserRepository;
+import com.example.hotel.dao.UserDaoImpl;
 import com.example.hotel.entity.User;
 
 import java.util.List;
 
 public class UserService {
 
-    private final UserRepository userRepository = UserRepository.getInstance();
+    private final UserDaoImpl userDaoImpl = UserDaoImpl.getInstance();
 
 
     List<User> findAll() {

@@ -1,7 +1,8 @@
 package com.example.hotel.dao;
 
 import com.example.hotel.entity.User;
-import com.example.hotel.entity.enums.Role;
+import com.example.hotel.entity.type.Role;
+import com.example.hotel.exception.DaoException;
 import com.example.hotel.util.ConnectionManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -15,26 +16,41 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class UserRepository implements Dao<Integer, User> {
+public class UserDaoImpl implements Dao<Integer, User> {
 
     static Logger logger = LogManager.getLogger();
 
-    private static final UserRepository INSTANCE = new UserRepository();
+    private static final UserDaoImpl INSTANCE = new UserDaoImpl();
 
-    private UserRepository() {
+    private UserDaoImpl() {
 
     }
 
-    public static UserRepository getInstance() {
+    public static UserDaoImpl getInstance() {
         return INSTANCE;
     }
 
 
-    private static final String FIND_ALL = " select * from users; ";
+    private static final String FIND_ALL = " select users.id, first_name, last_name, password, " +
+            "phone_number, e_mail, login, role_id" +
+            " from users; ";
+
+
+    String findById = """
+            select first_name, last_name, password, phone_number, e_mail, login, role_id
+            from users
+            where id = ?;
+            """;
+
+    String findByLogin = """
+            select users.id, first_name, last_name, password, phone_number, e_mail, login, role_id
+            from users
+            where login = ?;
+            """;
 
 
     @Override
-    public List<User> findAll() {
+    public List<User> findAll() throws DaoException {
         try (var connection = ConnectionManager.open();
              PreparedStatement prepareStatement = connection.prepareStatement(FIND_ALL);
 
@@ -49,8 +65,8 @@ public class UserRepository implements Dao<Integer, User> {
             return userList;
 
         } catch (SQLException sqlException) {
-            logger.log(Level.ERROR,"SQL Exception findAll method USERDAO");
-            throw new RuntimeException(sqlException);
+            logger.log(Level.ERROR, "SQL Exception findAll method USERDAO");
+            throw new DaoException();
 
         }
 
@@ -59,15 +75,9 @@ public class UserRepository implements Dao<Integer, User> {
 
     @Override
     public Optional<User> findById(Integer id) throws SQLException { // TODO ==> IS IT CORRECT RETURN Optional ??
-        String sql = """
-                select *
-                from users
-                where id = ?;
-                """;
-
         Connection open = ConnectionManager.open();
         ResultSet resultSet;
-        try (PreparedStatement prepareStatement = open.prepareStatement(sql)) {
+        try (PreparedStatement prepareStatement = open.prepareStatement(findById)) {
             prepareStatement.setInt(1, id);
             resultSet = prepareStatement.executeQuery();
         }
@@ -96,29 +106,12 @@ public class UserRepository implements Dao<Integer, User> {
     }
 
 
-    private User buildUser(ResultSet resultSet) throws SQLException {
-        return new User(
-                resultSet.getObject("id", Integer.class),
-                resultSet.getObject("first_name", String.class),
-                resultSet.getObject("last_name", String.class),
-                resultSet.getObject("password", String.class),
-                resultSet.getObject("phone_number", String.class),
-                resultSet.getObject("e_mail", String.class),// TODO email or e_mail ??
-                resultSet.getObject("login", String.class),
-                Role.valueOf(resultSet.getObject("role_id", String.class)));
-    }
-
     public User findByLogin(String login) throws SQLException {
-        String sql = """
-                select *
-                from users
-                where login = ?;
-                """;
+
         User user = null;
         try (Connection open = ConnectionManager.open()) {
-            PreparedStatement prepareStatement = open.prepareStatement(sql);
-            int i = 7;
-            prepareStatement.setString(i, login);
+            PreparedStatement prepareStatement = open.prepareStatement(findByLogin);
+            prepareStatement.setString(1, login);
             ResultSet resultSet = prepareStatement.executeQuery();
             while (resultSet.next()) {
                 user = buildUser(resultSet);
@@ -126,5 +119,17 @@ public class UserRepository implements Dao<Integer, User> {
         }
 
         return user;
+    }
+
+    private User buildUser(ResultSet resultSet) throws SQLException {
+        return new User(
+                resultSet.getObject("id", Integer.class),
+                resultSet.getObject("first_name", String.class),
+                resultSet.getObject("last_name", String.class),
+                resultSet.getObject("password", String.class),
+                resultSet.getObject("phone_number", String.class),
+                resultSet.getObject("e_mail", String.class),
+                resultSet.getObject("login", String.class),
+                Role.valueOf(resultSet.getObject("role_id", String.class)));
     }
 }
